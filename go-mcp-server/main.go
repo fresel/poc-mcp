@@ -59,6 +59,7 @@ func ScaffoldJavaApp(ctx context.Context, req *mcp.CallToolRequest, input Scaffo
 	}
 
 	target := filepath.Join(parent, "java-test")
+	log.Printf("scaffold_java_app: kind=%s target=%s", input.Kind, target)
 
 	if _, err := os.Stat(target); err == nil {
 		return nil, ScaffoldOutput{}, fmt.Errorf("target already exists: %s", target)
@@ -103,6 +104,7 @@ func ScaffoldJavaApp(ctx context.Context, req *mcp.CallToolRequest, input Scaffo
 		}
 	}
 
+	log.Printf("scaffold_java_app: created %s", target)
 	return nil, ScaffoldOutput{Path: target}, nil
 }
 
@@ -122,6 +124,7 @@ func main() {
 		Description: "create a basic Java Maven app named java-test under a user-specified folder",
 	}, ScaffoldJavaApp)
 	// Run the server over stdin/stdout, until the client disconnects.
+	log.Printf("starting greeter MCP server")
 	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 		log.Fatal(err)
 	}
