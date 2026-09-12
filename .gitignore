@@ -23,3 +23,6 @@ dist/
 
 # Ignore the test folder relative to the project root
 test/
+
+# Ignore the bin
+bin/
