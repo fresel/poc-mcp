@@ -20,3 +20,6 @@ __debug_bin*
 # Node modules and distribution files
 node_modules/
 dist/
+
+# Ignore the test folder relative to the project root
+test/
