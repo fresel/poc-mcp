@@ -17,11 +17,10 @@ A small Model Context Protocol (MCP) playground with Go and TypeScript servers, 
 - Go 1.27 or later
 - VS Code with MCP support, if using the server from VS Code
 
-Build the server binary from the repository root:
+Build the Docker image from the repository root:
 
 ```bash
-mkdir -p bin
-go build -o bin/go-mcp-server ./go-mcp-server
+docker build -f docker-mcp-server/Dockerfile -t poc-mcp-server:distroless .
 ```
 
 Run the server directly:
@@ -48,6 +47,8 @@ Create or update `.vscode/mcp.json`:
         "-i",
         "-v",
         "${workspaceFolder}:/workspace",
+        "-e",
+        "MCP_WORKSPACE_ROOT=/workspace",
         "poc-mcp-server:distroless"
       ]
     }
@@ -55,7 +56,6 @@ Create or update `.vscode/mcp.json`:
 }
 ```
 After rebuilding the image, restart or reload the MCP server from VS Code.
-After rebuilding the binary, restart or reload the MCP server from VS Code.
 
 For the full setup and troubleshooting steps, see [docs/go-mcp-server.md](docs/go-mcp-server.md).
 
@@ -81,9 +81,10 @@ The Go MCP server exposes `scaffold_java_app`. For example:
 
 ```json
 {
-  "folder": "/workspaces/my-project",
+  "projectName": "my-project",
+  "folder": "demo",
   "kind": "controller"
 }
 ```
 
-`folder` is the parent directory selected by the MCP user. It may be an absolute path or a path relative to the MCP server working directory. The tool creates the `java-test` project inside that folder, for example `/workspaces/my-project/java-test`.
+`folder` is relative to the workspace root and `projectName` is the project directory name. The example creates `demo/my-project`. Call the tool again with the same `projectName` and another `kind` (`controller`, `service`, `model`, `integration-test`, or `unit-test`) to add another scaffold to that project.

@@ -43,13 +43,15 @@ Add the following server entry to `.vscode/mcp.json`:
         "-i",
         "-v",
         "${workspaceFolder}:/workspace",
+        "-e",
+        "MCP_WORKSPACE_ROOT=/workspace",
         "poc-mcp-server:distroless"
       ]
     }
   }
 }
 ```
-`${workspaceFolder}` resolves to the repository root opened in VS Code. The Docker volume makes that workspace available inside the container at `/workspace`.
+`${workspaceFolder}` resolves to the repository root opened in VS Code. The Docker volume makes that workspace available inside the container at `/workspace`, and `MCP_WORKSPACE_ROOT` tells the scaffolder to resolve user folders from there.
 `${workspaceFolder}` resolves to the repository root opened in VS Code. The command must point to the compiled binary, not to `go run`, because this configuration is intended to use the build in `bin/`.
 
 If the workspace also contains other MCP servers, keep their entries under the same `servers` object.
@@ -70,18 +72,19 @@ The `scaffold_java_app` tool accepts a `folder` argument supplied by the MCP use
 
 ```json
 {
-  "folder": "/workspaces/my-project",
+  "projectName": "my-project",
+  "folder": "demo",
   "kind": "controller"
 }
 ```
 
-The folder can be an absolute path or a path relative to the server's working directory. The tool creates the `java-test` project inside it, so the example creates:
+The `folder` value is relative to the workspace root and `projectName` is the new project directory name. The example creates:
 
 ```text
-/workspaces/my-project/java-test
+/workspace/demo/my-project
 ```
 
-Supported `kind` values are `controller`, `service`, `integration-test`, and `unit-test`. The target must not already exist.
+Supported `kind` values are `controller`, `service`, `model`, `integration-test`, and `unit-test`. Call the tool again with the same `projectName` and a different `kind` to add more scaffolds. Existing files are never overwritten.
 
 When running the server in Docker, the selected host directory must be mounted into the container. For example, to allow scaffolding under the repository's `test` directory:
 
@@ -96,13 +99,15 @@ When running the server in Docker, the selected host directory must be mounted i
       "-i",
       "-v",
       "${workspaceFolder}/test:/workspace/test",
+      "-e",
+      "MCP_WORKSPACE_ROOT=/workspace",
       "poc-mcp-server:distroless"
     ]
   }
 }
 ```
 
-Use `folder: "/workspace/test/demo"` with that configuration. It creates `/workspace/test/demo/java-test` in the container, persisted on the host as `test/demo/java-test`.
+Use `projectName: "demo"`, `folder: "test"` with that configuration. It creates `/workspace/test/demo` in the container, persisted on the host as `test/demo`.
 
 ## 5. Rebuild after changes
 
