@@ -33,7 +33,7 @@ func SayHi(ctx context.Context, req *mcp.CallToolRequest, input Input) (
 }
 
 type ScaffoldInput struct {
-	Folder string `json:"folder" jsonschema:"folder relative to test where java-test should be created"`
+	Folder string `json:"folder" jsonschema:"parent folder where the java-test project should be created; absolute or relative to the server working directory"`
 	Kind   string `json:"kind" jsonschema:"template kind: controller, service, integration-test, or unit-test"`
 }
 
@@ -53,16 +53,12 @@ func ScaffoldJavaApp(ctx context.Context, req *mcp.CallToolRequest, input Scaffo
 		return nil, ScaffoldOutput{}, fmt.Errorf("kind must be one of: controller, service, integration-test, unit-test")
 	}
 
-	testRoot, err := filepath.Abs("../test")
+	parent, err := filepath.Abs(filepath.Clean(input.Folder))
 	if err != nil {
-		return nil, ScaffoldOutput{}, fmt.Errorf("resolve test directory: %w", err)
+		return nil, ScaffoldOutput{}, fmt.Errorf("resolve folder: %w", err)
 	}
 
-	target := filepath.Join(testRoot, filepath.Clean(input.Folder), "java-test")
-	relative, err := filepath.Rel(testRoot, target)
-	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
-		return nil, ScaffoldOutput{}, fmt.Errorf("folder must stay inside test")
-	}
+	target := filepath.Join(parent, "java-test")
 
 	if _, err := os.Stat(target); err == nil {
 		return nil, ScaffoldOutput{}, fmt.Errorf("target already exists: %s", target)
@@ -123,7 +119,7 @@ func main() {
 	mcp.AddTool(server, &mcp.Tool{Name: "greet", Description: "say hi"}, SayHi)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "scaffold_java_app",
-		Description: "create a basic Java Maven app named java-test under test",
+		Description: "create a basic Java Maven app named java-test under a user-specified folder",
 	}, ScaffoldJavaApp)
 	// Run the server over stdin/stdout, until the client disconnects.
 	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {

@@ -27,7 +27,7 @@ go build -o bin/go-mcp-server ./go-mcp-server
 Run the server directly:
 
 ```bash
-./bin/go-mcp-server
+docker run --rm -i poc-mcp-server:distroless
 ```
 
 The server uses stdio, so it waits for MCP messages on standard input and writes responses to standard output.
@@ -41,12 +41,20 @@ Create or update `.vscode/mcp.json`:
   "servers": {
     "go-mcp-server": {
       "type": "stdio",
-      "command": "${workspaceFolder}/bin/go-mcp-server"
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "${workspaceFolder}:/workspace",
+        "poc-mcp-server:distroless"
+      ]
     }
   }
 }
 ```
-
+After rebuilding the image, restart or reload the MCP server from VS Code.
 After rebuilding the binary, restart or reload the MCP server from VS Code.
 
 For the full setup and troubleshooting steps, see [docs/go-mcp-server.md](docs/go-mcp-server.md).
@@ -73,9 +81,9 @@ The Go MCP server exposes `scaffold_java_app`. For example:
 
 ```json
 {
-  "folder": "demo",
+  "folder": "/workspaces/my-project",
   "kind": "controller"
 }
 ```
 
-This creates a Java scaffold under `test/demo/java-test`.
+`folder` is the parent directory selected by the MCP user. It may be an absolute path or a path relative to the MCP server working directory. The tool creates the `java-test` project inside that folder, for example `/workspaces/my-project/java-test`.

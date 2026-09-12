@@ -1,6 +1,6 @@
 # Configure and build the Go MCP server
 
-This guide configures the Go MCP server as a VS Code stdio server and builds the binary that VS Code launches.
+This guide configures the Go MCP server as a VS Code stdio server and builds the Docker image that VS Code launches.
 
 ## 1. Check Go
 
@@ -17,23 +17,15 @@ The Go modules in this repository require Go 1.27 or later.
 Run this command from the repository root:
 
 ```bash
-mkdir -p bin
-go build -o bin/go-mcp-server ./go-mcp-server
+docker build -f docker-mcp-server/Dockerfile -t poc-mcp-server:distroless .
 ```
 
-The output is:
+The image is tagged as:
 
 ```text
-bin/go-mcp-server
+poc-mcp-server:distroless
 ```
 
-The `bin/` directory is ignored by Git because the binary is a local build artifact.
-
-To verify the binary exists and is executable:
-
-```bash
-test -x bin/go-mcp-server && file bin/go-mcp-server
-```
 
 ## 3. Configure VS Code
 
@@ -44,12 +36,20 @@ Add the following server entry to `.vscode/mcp.json`:
   "servers": {
     "go-mcp-server": {
       "type": "stdio",
-      "command": "${workspaceFolder}/bin/go-mcp-server"
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "${workspaceFolder}:/workspace",
+        "poc-mcp-server:distroless"
+      ]
     }
   }
 }
 ```
-
+`${workspaceFolder}` resolves to the repository root opened in VS Code. The Docker volume makes that workspace available inside the container at `/workspace`.
 `${workspaceFolder}` resolves to the repository root opened in VS Code. The command must point to the compiled binary, not to `go run`, because this configuration is intended to use the build in `bin/`.
 
 If the workspace also contains other MCP servers, keep their entries under the same `servers` object.
@@ -64,12 +64,52 @@ In VS Code:
 
 The server communicates over standard input and standard output. Do not add logging to standard output, since it would corrupt the MCP protocol stream.
 
+## Choose the scaffold destination
+
+The `scaffold_java_app` tool accepts a `folder` argument supplied by the MCP user:
+
+```json
+{
+  "folder": "/workspaces/my-project",
+  "kind": "controller"
+}
+```
+
+The folder can be an absolute path or a path relative to the server's working directory. The tool creates the `java-test` project inside it, so the example creates:
+
+```text
+/workspaces/my-project/java-test
+```
+
+Supported `kind` values are `controller`, `service`, `integration-test`, and `unit-test`. The target must not already exist.
+
+When running the server in Docker, the selected host directory must be mounted into the container. For example, to allow scaffolding under the repository's `test` directory:
+
+```json
+{
+  "go-mcp-server": {
+    "type": "stdio",
+    "command": "docker",
+    "args": [
+      "run",
+      "--rm",
+      "-i",
+      "-v",
+      "${workspaceFolder}/test:/workspace/test",
+      "poc-mcp-server:distroless"
+    ]
+  }
+}
+```
+
+Use `folder: "/workspace/test/demo"` with that configuration. It creates `/workspace/test/demo/java-test` in the container, persisted on the host as `test/demo/java-test`.
+
 ## 5. Rebuild after changes
 
 Whenever Go server code changes, rebuild the binary:
 
 ```bash
-go build -o bin/go-mcp-server ./go-mcp-server
+docker build -f docker-mcp-server/Dockerfile -t poc-mcp-server:distroless .
 ```
 
 Then restart the MCP server in VS Code.
@@ -94,21 +134,20 @@ go build -o ../bin/go-mcp-server .
 
 ### `go: cannot find main module`
 
-Run the command from the repository root with the package path:
+Run the Docker build from the repository root:
 
 ```bash
-go build -o bin/go-mcp-server ./go-mcp-server
+docker build -f docker-mcp-server/Dockerfile -t poc-mcp-server:distroless .
 ```
 
 Or change into `go-mcp-server` before running module commands.
 
 ### VS Code cannot start the server
 
-Check that the binary exists and is executable:
+Check that the image exists:
 
 ```bash
-ls -l bin/go-mcp-server
-test -x bin/go-mcp-server
+docker image inspect poc-mcp-server:distroless
 ```
 
-Rebuild it if necessary, then restart the server from VS Code.
+Rebuild the image if necessary, then restart the server from VS Code.
