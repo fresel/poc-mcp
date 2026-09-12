@@ -147,7 +147,7 @@ var validScaffoldKinds = map[string]bool{
 
 func main() {
 	// Create a server with a single tool.
-	server := mcp.NewServer(&mcp.Implementation{Name: "greeter", Version: "v1.0.0"}, nil)
+	server := mcp.NewServer(&mcp.Implementation{Name: "greeter", Version: "v1.0.1"}, nil)
 	mcp.AddTool(server, &mcp.Tool{Name: "greet", Description: "say hi"}, SayHi)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "scaffold_java_app",
