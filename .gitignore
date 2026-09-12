@@ -1,1 +1,18 @@
 .vscode/
+
+# Ignore debug files
+*.log
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+*.tmp
+*.pid
+*.lock
+*.cache
+*.swp
+*.bak
+*.tmp
+__debug_*
+__debug_bin*

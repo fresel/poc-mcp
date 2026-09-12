@@ -15,7 +15,8 @@ func main() {
 	client := mcp.NewClient(&mcp.Implementation{Name: "mcp-client", Version: "v1.0.0"}, nil)
 
 	// Connect to a server over stdin/stdout.
-	transport := &mcp.CommandTransport{Command: exec.Command("myserver")}
+	cmd := exec.Command("go", "run", "../go-mcp-server/main.go")
+	transport := &mcp.CommandTransport{Command: cmd}
 	session, err := client.Connect(ctx, transport, nil)
 	if err != nil {
 		log.Fatal(err)
